@@ -218,6 +218,21 @@ module Norikra
       end
     end
 
+    def replace(query)
+      info "replacing query", name: query.name, targets: query.targets, expression: query.expression
+      if @queries.select{|q| q.name == query.name }.size == 0 &&
+         @suspended_queries.select{|q| q.name == query.name }.size == 0
+        raise Norikra::ClientError, "query name '#{query.name}' does not exists"
+      end
+
+      if reason = query.invalid?
+        raise Norikra::ClientError, "invalid query '#{query.name}': #{reason}"
+      end
+
+      deregister(query.name)
+      register(query)
+    end
+
     def suspend(query_name)
       info "suspending query", name: query_name
       queries = @queries.select{|q| q.name == query_name }
